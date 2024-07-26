@@ -1,45 +1,32 @@
-#Requires vars for AZURE_WEBAPP_NAME_DEV, AZURE_RESOURCE_GROUP, and SLOT_NAME_DEV
-#Also be sure to add AZURE_WEBAPP_PUBLISH_PROFILE_DEV to repository secrets
-
 name: Deploy Dev
-
-on: 
+true:
   workflow_run:
-    workflows: ['build']
+    workflows:
+    - build
     types:
-      - completed
-  
+    - completed
 jobs:
   Dotnet-deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Download workflow artifact
-        uses: dawidd6/action-download-artifact@v2.24.0
-        with: 
-          workflow: build.yml 
-          workflow_conclusion: success
-          name: ${{ github.sha }}
-          path: ${{ github.sha }}
-          check_artifacts: true
-          search_artifacts: true
-      - uses: azure/login@v1
-        with:
-          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}"}'
-      - name: 'Azure WebApp Deploy'
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME_DEV }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
-          package: ${{ github.sha }}
-    
-  velocity-checkin:
-    uses: StrongMind/public-reusable-workflows/.github/workflows/velocityCheckin.yml@main
-    with:
-      sourceEnvironment: dev
-      sourceBranch: ${{ github.ref_name }}
-      sourceRevision: ${{ github.sha }}
-      sourceRepo: ${{ github.server_url }}/${{ github.repository }}
-      sourceVersion: ${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}
-    secrets:
-      VELOCITY_DEPLOYMENT_TOKEN: ${{ secrets.VELOCITY_DEPLOYMENT_TOKEN }}     
+    - name: Download workflow artifact
+      uses: dawidd6/action-download-artifact@v2.24.0
+      with:
+        workflow: build.yml
+        workflow_conclusion: success
+        name: ${{ github.sha }}
+        path: ${{ github.sha }}
+        check_artifacts: true
+        search_artifacts: true
+    - uses: azure/login@v1
+      with:
+        creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET
+          }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID
+          }}"}'
+    - name: Azure WebApp Deploy
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ vars.AZURE_WEBAPP_NAME_DEV }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
+        package: ${{ github.sha }}
